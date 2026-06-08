@@ -527,7 +527,10 @@
 <section class="polls-section" style="padding:5rem 1.5rem;" id="vibe">
   <div class="container">
     <div class="section-label reveal">Anonymous polls</div>
-    <h2 class="section-title reveal">Vibe check 🌡️</h2>
+    <h2 class="section-title reveal" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+      Vibe check 🌡️
+      <button class="refresh-btn" onclick="refreshAll()" style="font-family:'DM Mono',monospace;font-size:11px;padding:.4rem .9rem;border:1px solid rgba(0,0,0,.12);border-radius:20px;background:white;color:var(--muted);cursor:pointer;font-weight:400;letter-spacing:.05em;">↻ Refresh</button>
+    </h2>
     <p class="reveal" style="color:var(--muted);font-size:14px;margin-bottom:2rem;">Help shape the trip — totally anonymous. Drag the slider and submit.</p>
     <div id="polls-container"></div>
   </div>
@@ -572,7 +575,10 @@
       <!-- NOTES CARD — edit freely below -->
       <div class="notes-card" style="grid-column:1/-1;">
         <div class="essential-icon">📌</div>
-        <div class="essential-title">Notes &amp; Links</div>
+        <div class="essential-title" style="display:flex;align-items:center;justify-content:space-between;">
+          Notes &amp; Links
+          <button class="refresh-btn" onclick="refreshAll()" style="font-family:'DM Mono',monospace;font-size:11px;padding:.3rem .8rem;border:1px solid rgba(0,0,0,.12);border-radius:20px;background:var(--cream);color:var(--muted);cursor:pointer;font-weight:400;letter-spacing:.05em;">↻ Refresh</button>
+        </div>
         <ul class="notes-list" id="notes-list"></ul>
         <div style="display:flex;gap:.5rem;margin-top:.85rem;">
           <input id="note-input" type="text" placeholder="Add a note or paste a link…"
@@ -812,13 +818,20 @@
 
   document.querySelector('.day-card').classList.add('open');
 
-  // Fetch remote data first, then render everything
-  fetchRemote().then(() => {
-    initPolls();
-    renderNotes();
-  });
+  // Don't auto-fetch — user triggers refresh manually
+  initPolls();
+  renderNotes();
 
   function toggleDay(card) { card.classList.toggle('open'); }
+
+  async function refreshAll() {
+    const btns = document.querySelectorAll('.refresh-btn');
+    btns.forEach(b => { b.textContent = '↻ Loading…'; b.disabled = true; });
+    await fetchRemote();
+    POLLS.forEach(p => renderPoll(p.id));
+    renderNotes();
+    btns.forEach(b => { b.textContent = '↻ Refresh'; b.disabled = false; });
+  }
 </script>
 </body>
 </html>
