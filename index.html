@@ -737,16 +737,38 @@
 
   async function submitVote(pollId) {
     const my = loadMyVotes();
-    if (my[pollId] !== undefined) return;
     const slider = document.getElementById('slider-' + pollId);
     const val = parseInt(slider.value);
-    // Always fetch latest first so we don't overwrite other people's votes
+    const prevVal = my[pollId];
+    // Always fetch latest first
     await fetchRemote();
     if (!remoteData.polls[pollId]) remoteData.polls[pollId] = [];
+    // Remove previous vote from tally if re-voting
+    if (prevVal !== undefined) {
+      const idx = remoteData.polls[pollId].indexOf(prevVal);
+      if (idx !== -1) remoteData.polls[pollId].splice(idx, 1);
+    }
     remoteData.polls[pollId].push(val);
     my[pollId] = val;
     saveMyVotes(my);
     await pushRemote();
+    renderPoll(pollId);
+  }
+
+  async function clearVote(pollId) {
+    const my = loadMyVotes();
+    const prevVal = my[pollId];
+    // Remove their vote from the remote tally immediately
+    if (prevVal !== undefined) {
+      await fetchRemote();
+      if (remoteData.polls[pollId]) {
+        const idx = remoteData.polls[pollId].indexOf(prevVal);
+        if (idx !== -1) remoteData.polls[pollId].splice(idx, 1);
+        await pushRemote();
+      }
+    }
+    delete my[pollId];
+    saveMyVotes(my);
     renderPoll(pollId);
   }
 
@@ -804,7 +826,10 @@
       <div class="poll-value-display" id="val-${pollId}">${hasVoted ? valueLabels[myVal] + ' — your vote' : 'drag to pick'}</div>
       ${!hasVoted ? `<div class="poll-submit-row"><button class="poll-submit-btn" onclick="submitVote('${pollId}')">Submit →</button></div>` : ''}
       ${resultsHtml}
-      <div class="poll-footer-note">${hasVoted ? 'voted · results shown above' : 'anonymous · one vote per device'}</div>`;
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.6rem;">
+        <div class="poll-footer-note">${hasVoted ? 'voted · results shown above' : 'anonymous · one vote per device'}</div>
+        ${hasVoted ? `<button onclick="clearVote('${pollId}')" style="font-family:'DM Mono',monospace;font-size:10px;padding:.3rem .75rem;border:1px solid rgba(0,0,0,.1);border-radius:20px;background:none;color:var(--muted);cursor:pointer;letter-spacing:.05em;">↩ Vote again</button>` : ''}
+      </div>`;
 
     // init track colour
     const inp = document.getElementById('slider-' + pollId);
