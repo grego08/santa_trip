@@ -152,7 +152,40 @@
   .poll-result-bar.mine { background:var(--sage); }
   .poll-footer-note { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:.6rem; }
 
-  /* ── SCROLL REVEAL ── */
+  /* ── ENTRY GATE ── */
+  .gate {
+    position:fixed; inset:0; z-index:999;
+    background:linear-gradient(165deg,#1a4a6b 0%,#2d6a9f 40%,#3a8fbf 65%,#6db8d4 85%,#a8d8ea 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:2rem;
+  }
+  .gate::before {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:160px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 160'%3E%3Cpath fill='%23faf7f2' d='M0,120 C360,40 720,160 1080,80 C1260,40 1380,100 1440,120 L1440,160 L0,160 Z'/%3E%3C/svg%3E") no-repeat bottom;
+    background-size:cover;
+  }
+  .gate-eyebrow { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.25em; color:rgba(255,255,255,.6); text-transform:uppercase; margin-bottom:1.25rem; }
+  .gate-title { font-family:'Playfair Display',serif; font-size:clamp(2.2rem,8vw,4rem); font-weight:700; color:white; text-align:center; line-height:1.1; margin-bottom:.3em; }
+  .gate-sub { font-family:'Playfair Display',serif; font-style:italic; font-size:clamp(1rem,3vw,1.5rem); color:rgba(255,255,255,.7); margin-bottom:2.5rem; }
+  .gate-input-wrap { display:flex; gap:.5rem; position:relative; z-index:1; }
+  .gate-input {
+    padding:.7rem 1.1rem; border:none; border-radius:12px;
+    font-size:16px; font-family:'DM Sans',sans-serif; outline:none;
+    background:rgba(255,255,255,.15); color:white; width:160px;
+    letter-spacing:.2em; text-align:center;
+    backdrop-filter:blur(8px);
+    border:1.5px solid rgba(255,255,255,.25);
+    transition:border-color .2s;
+  }
+  .gate-input::placeholder { color:rgba(255,255,255,.45); letter-spacing:.1em; }
+  .gate-input:focus { border-color:rgba(255,255,255,.6); }
+  .gate-btn {
+    padding:.7rem 1.4rem; background:white; color:#1a4a6b;
+    border:none; border-radius:12px; font-size:14px; font-weight:600;
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:opacity .2s;
+  }
+  .gate-btn:hover { opacity:.9; }
+  .gate-error { font-size:12px; color:rgba(255,200,180,.9); margin-top:.75rem; font-family:'DM Mono',monospace; letter-spacing:.05em; min-height:1.2em; }
   .reveal { opacity:0; transform:translateY(24px); transition:opacity .6s ease,transform .6s ease; }
   .reveal.visible { opacity:1; transform:translateY(0); }
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -203,6 +236,19 @@
 </style>
 </head>
 <body>
+
+<!-- ENTRY GATE -->
+<div class="gate" id="gate">
+  <div class="gate-eyebrow">Liguria · Italian Riviera · June 2026</div>
+  <div class="gate-title">Santa Margherita</div>
+  <div class="gate-sub">Tides &amp; Trails</div>
+  <div class="gate-input-wrap">
+    <input class="gate-input" id="gate-input" type="password" placeholder="password"
+      onkeydown="if(event.key==='Enter')checkGate()">
+    <button class="gate-btn" onclick="checkGate()">Enter →</button>
+  </div>
+  <div class="gate-error" id="gate-error"></div>
+</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -361,6 +407,7 @@
             <div class="tl-content">
               <div class="tl-title">Hike: Corniglia → Vernazza (3.4 km, ~1h30)</div>
               <div class="tl-note">Beautiful forested stretch with sea views. Corniglia is the only village with no harbour — perched on a cliff 100m above the sea. A 5-min bus from the station gets you up (included in card).</div>
+              <div class="tl-tip ok">👟 Shoes: pretty chill overall — sneakers are fine.</div>
             </div>
           </div>
           <div class="tl-item">
@@ -602,6 +649,31 @@
 </footer>
 
 <script>
+  // ── ENTRY GATE ──
+  const GATE_PASS = 'santa2026';
+  const GATE_KEY  = 'santa26_unlocked';
+
+  function checkGate() {
+    const val = document.getElementById('gate-input').value.trim().toLowerCase();
+    if (val === GATE_PASS) {
+      sessionStorage.setItem(GATE_KEY, '1');
+      const gate = document.getElementById('gate');
+      gate.style.transition = 'opacity .5s ease';
+      gate.style.opacity = '0';
+      setTimeout(() => gate.style.display = 'none', 500);
+    } else {
+      const err = document.getElementById('gate-error');
+      err.textContent = 'Wrong password — try again.';
+      document.getElementById('gate-input').value = '';
+      setTimeout(() => err.textContent = '', 2000);
+    }
+  }
+
+  // If already unlocked this session, skip gate
+  if (sessionStorage.getItem(GATE_KEY)) {
+    document.getElementById('gate').style.display = 'none';
+  }
+
   // ── JSONBIN CONFIG ──
   const BIN_ID  = '6a2707bada38895dfe9b71c2';
   const API_KEY = '$2a$10$lMcLHM0vKfb2A72YeMUOu./YIZiB/8y2Pcxk70Z6kRME8PyIIocse';
