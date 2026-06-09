@@ -740,12 +740,14 @@
     if (my[pollId] !== undefined) return;
     const slider = document.getElementById('slider-' + pollId);
     const val = parseInt(slider.value);
+    // Always fetch latest first so we don't overwrite other people's votes
+    await fetchRemote();
     if (!remoteData.polls[pollId]) remoteData.polls[pollId] = [];
     remoteData.polls[pollId].push(val);
     my[pollId] = val;
     saveMyVotes(my);
-    renderPoll(pollId);
     await pushRemote();
+    renderPoll(pollId);
   }
 
   function getAvg(arr) {
@@ -857,6 +859,7 @@
     const input = document.getElementById('note-input');
     const val = input.value.trim();
     if (!val) return;
+    await fetchRemote();
     if (!remoteData.notes || !remoteData.notes.length) remoteData.notes = [...DEFAULT_NOTES];
     remoteData.notes.push({ text: val });
     input.value = '';
@@ -865,6 +868,7 @@
   }
 
   async function deleteNote(i) {
+    await fetchRemote();
     if (!remoteData.notes || !remoteData.notes.length) remoteData.notes = [...DEFAULT_NOTES];
     remoteData.notes.splice(i, 1);
     renderNotes();
